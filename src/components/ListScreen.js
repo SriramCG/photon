@@ -3,40 +3,44 @@ import {View, Text, Image, TouchableOpacity} from 'react-native';
 import {FlatList} from 'react-native-gesture-handler';
 import {BASE_URL} from '../utils/constants';
 import styles from '../styles/ListScreenStyles';
+import PropTypes from 'prop-types';
 
 export default class ListScreen extends React.PureComponent {
   constructor(props) {
     super(props);
     this.state = {
-      albumListData: [],
+      albumData: [],
     };
   }
 
   componentDidMount() {
-    this.getValuesForAlbum();
+    this.props.getAlbumDetails();
   }
 
-  getValuesForAlbum = async () => {
-    try {
-      let response = await fetch(BASE_URL);
-      let responseJson = await response.json();
-      const listData = responseJson;
-      this.setState({albumListData: listData});
-    } catch (e) {
-      console.log('Error ', e);
+  static getDerivedStateFromProps(nextProps, prevState) {
+    if (nextProps.albumData !== prevState.albumData) {
+      return {albumData: nextProps.albumData};
+    } else {
+      return null;
     }
-  };
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (prevProps.albumData !== this.props.albumData) {
+      this.setState({albumData: this.props.albumData});
+    }
+  }
 
   renderSeparator = () => {
     return <View style={styles.divider} />;
   };
 
   renderFlatList = () => {
-    if (this.state.albumListData && this.state.albumListData.length) {
+    if (this.state.albumData && this.state.albumData.length) {
       return (
         <FlatList
           bounces={false}
-          data={this.state.albumListData}
+          data={this.state.albumData}
           contentContainerStyle={{paddingHorizontal: 5}}
           showsVerticalScrollIndicator={false}
           keyExtractor={item => `key-${item.id}`}
@@ -87,3 +91,11 @@ export default class ListScreen extends React.PureComponent {
     return <View>{this.renderFlatList()}</View>;
   }
 }
+
+ListScreen.propTypes = {
+  getAlbumDetails: PropTypes.func,
+  albumData: PropTypes.array,
+  albumError: PropTypes.string,
+  albumStatus: PropTypes.string,
+  albumLoading: PropTypes.bool,
+};
